@@ -1,0 +1,134 @@
+{
+  "excluded_warmup_rows": [
+    {
+      "config": "split-v1",
+      "decode_tokens_per_second": 3.138427,
+      "quant": "Q4_K_M",
+      "row_id": 53,
+      "ttft_seconds": 1.4108
+    },
+    {
+      "config": "split-v2",
+      "decode_tokens_per_second": 2.714559,
+      "quant": "Q4_K_M",
+      "row_id": 54,
+      "ttft_seconds": 0.911512
+    }
+  ],
+  "method": {
+    "output_tokens": 64,
+    "prompt": "Explain why the sky is blue in one sentence.",
+    "recorded_pairs": 5,
+    "seed": 42,
+    "slot_id": 0,
+    "statistics": "mean, median, and sample standard deviation",
+    "warmups_excluded_per_config": 1
+  },
+  "quant": "Q4_K_M",
+  "recorded_rows": {
+    "split-v1": [
+      {
+        "config": "split-v1",
+        "decode_tokens_per_second": 2.907594,
+        "quant": "Q4_K_M",
+        "row_id": 55,
+        "ttft_seconds": 0.73237
+      },
+      {
+        "config": "split-v1",
+        "decode_tokens_per_second": 2.626035,
+        "quant": "Q4_K_M",
+        "row_id": 57,
+        "ttft_seconds": 0.747131
+      },
+      {
+        "config": "split-v1",
+        "decode_tokens_per_second": 2.530668,
+        "quant": "Q4_K_M",
+        "row_id": 59,
+        "ttft_seconds": 0.846935
+      },
+      {
+        "config": "split-v1",
+        "decode_tokens_per_second": 2.607938,
+        "quant": "Q4_K_M",
+        "row_id": 61,
+        "ttft_seconds": 0.874265
+      },
+      {
+        "config": "split-v1",
+        "decode_tokens_per_second": 2.533108,
+        "quant": "Q4_K_M",
+        "row_id": 63,
+        "ttft_seconds": 0.653047
+      }
+    ],
+    "split-v2": [
+      {
+        "config": "split-v2",
+        "decode_tokens_per_second": 2.560882,
+        "quant": "Q4_K_M",
+        "row_id": 56,
+        "ttft_seconds": 0.747661
+      },
+      {
+        "config": "split-v2",
+        "decode_tokens_per_second": 2.732177,
+        "quant": "Q4_K_M",
+        "row_id": 58,
+        "ttft_seconds": 0.778522
+      },
+      {
+        "config": "split-v2",
+        "decode_tokens_per_second": 2.554014,
+        "quant": "Q4_K_M",
+        "row_id": 60,
+        "ttft_seconds": 0.833995
+      },
+      {
+        "config": "split-v2",
+        "decode_tokens_per_second": 2.644441,
+        "quant": "Q4_K_M",
+        "row_id": 62,
+        "ttft_seconds": 0.761921
+      },
+      {
+        "config": "split-v2",
+        "decode_tokens_per_second": 2.410545,
+        "quant": "Q4_K_M",
+        "row_id": 64,
+        "ttft_seconds": 0.648392
+      }
+    ]
+  },
+  "summary": {
+    "split-v1": {
+      "decode_tokens_per_second": {
+        "mean": 2.6410685999999997,
+        "median": 2.607938,
+        "n": 5,
+        "sample_stdev": 0.1550832181952645
+      },
+      "ttft_seconds": {
+        "mean": 0.7707496,
+        "median": 0.747131,
+        "n": 5,
+        "sample_stdev": 0.09000609315374151
+      }
+    },
+    "split-v2": {
+      "decode_tokens_per_second": {
+        "mean": 2.5804118,
+        "median": 2.560882,
+        "n": 5,
+        "sample_stdev": 0.11944182795277379
+      },
+      "ttft_seconds": {
+        "mean": 0.7540981999999999,
+        "median": 0.761921,
+        "n": 5,
+        "sample_stdev": 0.0675582251076803
+      }
+    }
+  }
+}

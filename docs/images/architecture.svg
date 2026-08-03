@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" width="1200" height="420" role="img" aria-labelledby="title desc">
+  <title id="title">EdgeSplit architecture</title>
+  <desc id="desc">A caller sends a request through the FastAPI router to a CUDA laptop for prefill. The V1 slot-file path and the V2 raw sequence-state path both converge on the Android llama-server for decode, which streams the response back to the router.</desc>
+
+  <style>
+    .wire        { fill: none; stroke: #94A3B8; stroke-width: 2; }
+    .return-wire { fill: none; stroke: #2563EB; stroke-width: 2; stroke-dasharray: 6 5; }
+    .node rect   { fill: #FFFFFF; stroke: #CBD5E1; stroke-width: 1; }
+    .prefill rect{ fill: #EFF6FF; stroke: #93C5FD; }
+    .phone rect  { fill: #F0FDF4; stroke: #86EFAC; }
+    .node text   { fill: #111827; font: 400 14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; text-anchor: middle; }
+    .sub         { fill: #475569; font-size: 12px; }
+    .return-label{ fill: #2563EB; font: 500 12px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; text-anchor: middle; }
+  </style>
+
+  <defs>
+    <!-- markerUnits is strokeWidth, so at stroke-width 2 these render 20 units
+         long: the tip reaches 4 units past the path end, the body 16 units back.
+         Every wire below leaves at least that much runway before its target. -->
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94A3B8"/>
+    </marker>
+    <marker id="return-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563EB"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="420" fill="#FFFFFF"/>
+
+  <path class="wire" d="M 250 84 H 336"                    marker-end="url(#arrow)"/>
+  <path class="wire" d="M 560 84 H 676"                    marker-end="url(#arrow)"/>
+  <path class="wire" d="M 810 116 V 146 H 400 V 170"       marker-end="url(#arrow)"/>
+  <path class="wire" d="M 810 146 V 170"                   marker-end="url(#arrow)"/>
+  <path class="wire" d="M 400 238 L 467 303"               marker-end="url(#arrow)"/>
+  <path class="wire" d="M 800 238 L 554 305"               marker-end="url(#arrow)"/>
+  <path class="wire" d="M 590 338 H 706"                   marker-end="url(#arrow)"/>
+  <path class="return-wire" d="M 920 338 H 1080 V 14 H 530 V 48" marker-end="url(#return-arrow)"/>
+
+  <g class="node"><rect x="40"  y="52"  width="210" height="64" rx="6"/><text x="145" y="90">Caller</text></g>
+  <g class="node"><rect x="340" y="52"  width="220" height="64" rx="6"/><text x="450" y="90">FastAPI router</text></g>
+  <g class="node prefill"><rect x="680" y="52" width="260" height="64" rx="6"/><text x="810" y="81">WSL2 CUDA llama-server</text><text class="sub" x="810" y="101">prefill</text></g>
+
+  <g class="node"><rect x="250" y="174" width="300" height="64" rx="6"/><text x="400" y="201">V1: slot file</text><text class="sub" x="400" y="221">HTTP state receiver</text></g>
+  <g class="node"><rect x="650" y="174" width="300" height="64" rx="6"/><text x="800" y="201">V2: raw sequence state</text><text class="sub" x="800" y="221">TCP sender/listener</text></g>
+
+  <g class="node phone"><rect x="350" y="306" width="240" height="64" rx="6"/><text x="470" y="344">Android llama-server</text></g>
+  <g class="node"><rect x="710" y="306" width="210" height="64" rx="6"/><text x="815" y="344">decode stream</text></g>
+
+  <text class="return-label" x="1002" y="202">back to router</text>
+</svg>

@@ -1,0 +1,358 @@
+--- a/tools/server/server-context.cpp
++++ b/tools/server/server-context.cpp
+@@ -19,6 +19,7 @@
+ 
+ #include <algorithm>
+ #include <cstddef>
++#include <cstring>
+ #include <cinttypes>
+ #include <exception>
+ #include <memory>
+@@ -39,6 +40,21 @@
+ 
+ constexpr int HTTP_POLLING_SECONDS = 1;
+ 
++// This native little-endian envelope carries the output of
++// llama_state_seq_get_data_ext() plus the token sequence needed to restore a
++// server slot. It is only an in-process server boundary; EdgeSplit's TCP
++// protocol wraps it with a portable transfer header.
++constexpr uint32_t EDGESPLIT_V2_STATE_MAGIC = 0x32565345; // "ESV2"
++constexpr uint32_t EDGESPLIT_V2_STATE_VERSION = 1;
++
++struct edgesplit_v2_state_header {
++    uint32_t magic;
++    uint32_t version;
++    int32_t  source_sequence_id;
++    uint32_t n_tokens;
++    uint64_t state_bytes;
++};
++
+ static uint32_t server_n_outputs_max(const common_params & params) {
+     const uint32_t n_batch  = params.n_batch;
+ 
+@@ -2623,6 +2639,89 @@
+                     res->n_erased = n_erased;
+                     queue_results.send(std::move(res));
+                 } break;
++            case SERVER_TASK_TYPE_EDGESPLIT_V2_EXPORT:
++                {
++                    if (!check_no_mtmd(task.id)) {
++                        break;
++                    }
++                    const int id_slot = task.edgesplit_v2_action.id_slot;
++                    server_slot * slot = get_slot_by_id(id_slot);
++                    if (slot == nullptr) {
++                        send_error(task, "Invalid slot ID", ERROR_TYPE_INVALID_REQUEST);
++                        break;
++                    }
++                    if (slot->is_processing()) {
++                        SRV_DBG("requested slot is unavailable, defer task, id_task = %d\n", task.id);
++                        queue_tasks.defer(std::move(task));
++                        break;
++                    }
++
++                    const int64_t t_start = ggml_time_us();
++                    const size_t state_size = llama_state_seq_get_size_ext(
++                        ctx_tgt, slot->id, LLAMA_STATE_SEQ_FLAGS_NONE);
++                    if (state_size == 0) {
++                        send_error(task, "Unable to export empty sequence state", ERROR_TYPE_INVALID_REQUEST);
++                        break;
++                    }
++                    std::vector<uint8_t> state(state_size);
++                    const size_t nwrite = llama_state_seq_get_data_ext(
++                        ctx_tgt, state.data(), state.size(), slot->id, LLAMA_STATE_SEQ_FLAGS_NONE);
++                    if (nwrite != state.size()) {
++                        send_error(task, "Unable to export sequence state", ERROR_TYPE_SERVER);
++                        break;
++                    }
++
++                    auto res = std::make_unique<server_task_result_edgesplit_v2>();
++                    res->id        = task.id;
++                    res->id_slot   = id_slot;
++                    res->is_export = true;
++                    res->tokens    = slot->prompt.tokens.get_tokens();
++                    res->state     = std::move(state);
++                    res->n_bytes   = nwrite;
++                    res->t_ms      = (ggml_time_us() - t_start) / 1000.0;
++                    queue_results.send(std::move(res));
++                } break;
++            case SERVER_TASK_TYPE_EDGESPLIT_V2_IMPORT:
++                {
++                    if (!check_no_mtmd(task.id)) {
++                        break;
++                    }
++                    const int id_slot = task.edgesplit_v2_action.id_slot;
++                    server_slot * slot = get_slot_by_id(id_slot);
++                    if (slot == nullptr) {
++                        send_error(task, "Invalid slot ID", ERROR_TYPE_INVALID_REQUEST);
++                        break;
++                    }
++                    if (slot->is_processing()) {
++                        SRV_DBG("requested slot is unavailable, defer task, id_task = %d\n", task.id);
++                        queue_tasks.defer(std::move(task));
++                        break;
++                    }
++                    const auto & state = task.edgesplit_v2_action.state;
++                    if (state.empty()) {
++                        send_error(task, "Empty EdgeSplit V2 sequence state", ERROR_TYPE_INVALID_REQUEST);
++                        break;
++                    }
++
++                    const int64_t t_start = ggml_time_us();
++                    const size_t nread = llama_state_seq_set_data_ext(
++                        ctx_tgt, state.data(), state.size(), slot->id, LLAMA_STATE_SEQ_FLAGS_NONE);
++                    if (nread != state.size()) {
++                        send_error(task, "Unable to import sequence state", ERROR_TYPE_INVALID_REQUEST);
++                        break;
++                    }
++                    slot->prompt.tokens.clear();
++                    slot->prompt.tokens.insert(task.edgesplit_v2_action.tokens);
++
++                    auto res = std::make_unique<server_task_result_edgesplit_v2>();
++                    res->id        = task.id;
++                    res->id_slot   = id_slot;
++                    res->is_export = false;
++                    res->tokens    = task.edgesplit_v2_action.tokens;
++                    res->n_bytes   = nread;
++                    res->t_ms      = (ggml_time_us() - t_start) / 1000.0;
++                    queue_results.send(std::move(res));
++                } break;
+             case SERVER_TASK_TYPE_GET_LORA:
+                 {
+                     // TODO @ngxson : make lora_adapters a dedicated member of server_context
+@@ -4516,6 +4615,26 @@
+         return res;
+     };
+ 
++    this->get_edgesplit_v2_state = [this](const server_http_req & req) {
++        auto res = create_response();
++        try {
++            return handle_edgesplit_v2_export(req, std::stoi(req.get_param("id_slot")));
++        } catch (const std::exception &) {
++            res->error(format_error_response("Invalid slot ID", ERROR_TYPE_INVALID_REQUEST));
++            return res;
++        }
++    };
++
++    this->post_edgesplit_v2_state = [this](const server_http_req & req) {
++        auto res = create_response();
++        try {
++            return handle_edgesplit_v2_import(req, std::stoi(req.get_param("id_slot")));
++        } catch (const std::exception &) {
++            res->error(format_error_response("Invalid slot ID", ERROR_TYPE_INVALID_REQUEST));
++            return res;
++        }
++    };
++
+     this->get_props = [this](const server_http_req &) {
+         auto res = create_response(true);
+ 
+@@ -5191,6 +5310,100 @@
+     res->ok(result->to_json());
+     return res;
+ }
++
++std::unique_ptr<server_res_generator> server_routes::handle_edgesplit_v2_export(const server_http_req & req, int id_slot) {
++    auto res = create_response();
++    auto & rd = res->rd;
++    {
++        server_task task(SERVER_TASK_TYPE_EDGESPLIT_V2_EXPORT);
++        task.id = rd.get_new_id();
++        task.edgesplit_v2_action.id_slot = id_slot;
++        rd.post_task(std::move(task));
++    }
++
++    auto result = rd.next(req.should_stop);
++    if (!result) {
++        GGML_ASSERT(req.should_stop());
++        return res;
++    }
++    if (result->is_error()) {
++        res->error(result->to_json());
++        return res;
++    }
++    auto * state = dynamic_cast<server_task_result_edgesplit_v2 *>(result.get());
++    GGML_ASSERT(state != nullptr && state->is_export);
++
++    const edgesplit_v2_state_header header = {
++        EDGESPLIT_V2_STATE_MAGIC,
++        EDGESPLIT_V2_STATE_VERSION,
++        state->id_slot,
++        (uint32_t) state->tokens.size(),
++        (uint64_t) state->state.size(),
++    };
++    std::string body;
++    body.reserve(sizeof(header) + state->tokens.size()*sizeof(llama_token) + state->state.size());
++    body.append(reinterpret_cast<const char *>(&header), sizeof(header));
++    if (!state->tokens.empty()) {
++        body.append(reinterpret_cast<const char *>(state->tokens.data()), state->tokens.size()*sizeof(llama_token));
++    }
++    body.append(reinterpret_cast<const char *>(state->state.data()), state->state.size());
++    res->content_type = "application/octet-stream";
++    res->headers["X-EdgeSplit-V2-State-Version"] = std::to_string(EDGESPLIT_V2_STATE_VERSION);
++    res->headers["X-EdgeSplit-V2-Sequence-Length"] = std::to_string(state->tokens.size());
++    res->data = std::move(body);
++    return res;
++}
++
++std::unique_ptr<server_res_generator> server_routes::handle_edgesplit_v2_import(const server_http_req & req, int id_slot) {
++    auto res = create_response();
++    if (req.body.size() < sizeof(edgesplit_v2_state_header)) {
++        res->error(format_error_response("EdgeSplit V2 state body is too small", ERROR_TYPE_INVALID_REQUEST));
++        return res;
++    }
++    edgesplit_v2_state_header header;
++    std::memcpy(&header, req.body.data(), sizeof(header));
++    if (header.magic != EDGESPLIT_V2_STATE_MAGIC || header.version != EDGESPLIT_V2_STATE_VERSION) {
++        res->error(format_error_response("Invalid EdgeSplit V2 state header", ERROR_TYPE_INVALID_REQUEST));
++        return res;
++    }
++    if (header.n_tokens > SIZE_MAX / sizeof(llama_token) || header.state_bytes > SIZE_MAX) {
++        res->error(format_error_response("Invalid EdgeSplit V2 state lengths", ERROR_TYPE_INVALID_REQUEST));
++        return res;
++    }
++    const size_t tokens_bytes = (size_t) header.n_tokens * sizeof(llama_token);
++    const size_t state_bytes = (size_t) header.state_bytes;
++    if (tokens_bytes > SIZE_MAX - sizeof(header) ||
++            state_bytes > SIZE_MAX - sizeof(header) - tokens_bytes ||
++            req.body.size() != sizeof(header) + tokens_bytes + state_bytes) {
++        res->error(format_error_response("Invalid EdgeSplit V2 state body length", ERROR_TYPE_INVALID_REQUEST));
++        return res;
++    }
++
++    server_task task(SERVER_TASK_TYPE_EDGESPLIT_V2_IMPORT);
++    task.id = res->rd.get_new_id();
++    task.edgesplit_v2_action.id_slot = id_slot;
++    const char * cursor = req.body.data() + sizeof(header);
++    task.edgesplit_v2_action.tokens.resize(header.n_tokens);
++    if (tokens_bytes > 0) {
++        std::memcpy(task.edgesplit_v2_action.tokens.data(), cursor, tokens_bytes);
++        cursor += tokens_bytes;
++    }
++    task.edgesplit_v2_action.state.resize(state_bytes);
++    std::memcpy(task.edgesplit_v2_action.state.data(), cursor, state_bytes);
++    res->rd.post_task(std::move(task));
++
++    auto result = res->rd.next(req.should_stop);
++    if (!result) {
++        GGML_ASSERT(req.should_stop());
++        return res;
++    }
++    if (result->is_error()) {
++        res->error(result->to_json());
++        return res;
++    }
++    res->ok(result->to_json());
++    return res;
++}
+ 
+ std::unique_ptr<server_res_generator> server_routes::handle_embeddings_impl(const server_http_req & req, task_response_type res_type) {
+     auto res = create_response();
+--- a/tools/server/server-context.h
++++ b/tools/server/server-context.h
+@@ -131,6 +131,8 @@
+     server_http_context::handler_t get_metrics;
+     server_http_context::handler_t get_slots;
+     server_http_context::handler_t post_slots;
++    server_http_context::handler_t get_edgesplit_v2_state;
++    server_http_context::handler_t post_edgesplit_v2_state;
+     server_http_context::handler_t get_props;
+     server_http_context::handler_t post_props;
+     server_http_context::handler_t post_infill;
+@@ -167,6 +169,8 @@
+     std::unique_ptr<server_res_generator> handle_slots_save(const server_http_req & req, int id_slot);
+     std::unique_ptr<server_res_generator> handle_slots_restore(const server_http_req & req, int id_slot);
+     std::unique_ptr<server_res_generator> handle_slots_erase(const server_http_req &, int id_slot);
++    std::unique_ptr<server_res_generator> handle_edgesplit_v2_export(const server_http_req & req, int id_slot);
++    std::unique_ptr<server_res_generator> handle_edgesplit_v2_import(const server_http_req & req, int id_slot);
+     std::unique_ptr<server_res_generator> handle_embeddings_impl(const server_http_req & req, task_response_type res_type);
+     std::unique_ptr<server_res_generator> handle_count_tokens(const llama_vocab * vocab, mtmd_context * mctx, const server_http_req & req, task_response_type res_type);
+ 
+--- a/tools/server/server-task.cpp
++++ b/tools/server/server-task.cpp
+@@ -1598,6 +1598,20 @@
+ }
+ 
+ //
++// server_task_result_edgesplit_v2
++//
++
++json server_task_result_edgesplit_v2::to_json() {
++    return json {
++        { "action",   is_export ? "export" : "import" },
++        { "id_slot",  id_slot },
++        { "n_tokens", tokens.size() },
++        { "n_bytes",  n_bytes },
++        { "t_ms",     t_ms },
++    };
++}
++
++//
+ // server_task_result_get_lora
+ //
+ 
+--- a/tools/server/server-task.h
++++ b/tools/server/server-task.h
+@@ -7,6 +7,7 @@
+ #include <unordered_set>
+ #include <list>
+ #include <map>
++#include <vector>
+ 
+ // TODO: prevent including the whole server-common.h as we only use server_tokens
+ #include "server-common.h"
+@@ -25,6 +26,8 @@
+     SERVER_TASK_TYPE_SLOT_SAVE,
+     SERVER_TASK_TYPE_SLOT_RESTORE,
+     SERVER_TASK_TYPE_SLOT_ERASE,
++    SERVER_TASK_TYPE_EDGESPLIT_V2_EXPORT,
++    SERVER_TASK_TYPE_EDGESPLIT_V2_IMPORT,
+     SERVER_TASK_TYPE_GET_LORA,
+     SERVER_TASK_TYPE_SET_LORA,
+ };
+@@ -169,6 +172,15 @@
+     };
+     slot_action slot_action;
+ 
++    // Opaque llama_state_seq_* bytes for the additive EdgeSplit V2 endpoints.
++    // This is intentionally not a llama.cpp slot-save file.
++    struct edgesplit_v2_action {
++        int id_slot = -1;
++        llama_tokens tokens;
++        std::vector<uint8_t> state;
++    };
++    edgesplit_v2_action edgesplit_v2_action;
++
+     // used by SERVER_TASK_TYPE_METRICS
+     bool metrics_reset_bucket = false;
+ 
+@@ -555,6 +567,16 @@
+ 
+     virtual json to_json() override;
+ };
++
++struct server_task_result_edgesplit_v2 : server_task_result {
++    bool is_export = false;
++    llama_tokens tokens;
++    std::vector<uint8_t> state;
++    size_t n_bytes = 0;
++    double t_ms = 0.0;
++
++    virtual json to_json() override;
++};
+ 
+ struct server_task_result_control : server_task_result {
+     bool        success = false;
+--- a/tools/server/server.cpp
++++ b/tools/server/server.cpp
+@@ -263,6 +263,10 @@
+     // Save & load slots
+     ctx_http.get ("/slots",                    ex_wrapper(routes.get_slots));
+     ctx_http.post("/slots/:id_slot",           ex_wrapper(routes.post_slots));
++    // EdgeSplit V2 raw sequence-state endpoints. They are additive and do not
++    // share the stock /slots file save/restore path.
++    ctx_http.get ("/edgesplit/v2/state/:id_slot", ex_wrapper(routes.get_edgesplit_v2_state));
++    ctx_http.post("/edgesplit/v2/state/:id_slot", ex_wrapper(routes.post_edgesplit_v2_state));
+ 
+     // resumable streaming, the conversation_id is the session identity end to end. router and
+     // child wire different handlers under the same paths: a child binds the local session

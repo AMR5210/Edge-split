@@ -1,0 +1,14 @@
+# EdgeSplit laptop-side Python dependencies.
+#
+# Only the FastAPI router needs third-party packages. The benchmark harness,
+# binary transfer protocol, dashboard, and phone-side scripts are standard
+# library only, so the same files run unchanged under Termux on the phone.
+#
+# Requires Python 3.11 or newer (datetime.UTC).
+#
+# System requirements are NOT installable from here. For the CUDA build and the
+# Android side (Linux/WSL2, NVIDIA driver, CUDA toolkit, cmake, Termux) see the
+# Quickstart table in README.md.
+fastapi>=0.115,<1
+pydantic>=2.7,<3
+uvicorn[standard]>=0.30,<1

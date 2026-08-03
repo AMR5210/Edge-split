@@ -1,0 +1,15 @@
+# Normalize all text to LF in the repository.
+* text=auto eol=lf
+
+# Shell scripts must be LF even when checked out on Windows: these run under
+# WSL2 and Termux, where a CRLF shebang fails with "bad interpreter".
+*.sh    text eol=lf
+*.patch text eol=lf
+
+# Binary assets git should not touch.
+*.png binary
+*.jpg binary
+*.gif binary
+*.mp4 binary
+*.gguf binary
+*.sqlite3 binary

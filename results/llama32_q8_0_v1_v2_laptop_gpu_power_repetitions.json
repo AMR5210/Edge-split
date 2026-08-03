@@ -1,0 +1,305 @@
+{
+  "excluded_warmup_rows": [
+    {
+      "config": "split-v1",
+      "decode_tokens_per_second": 2.028312,
+      "laptop_gpu": {
+        "average_mw": 2535.9859154929577,
+        "duration_seconds": 31.831397764000002,
+        "max_mw": 9860.0,
+        "median_mw": 1790.0,
+        "metadata": {
+          "interval_seconds": 0.1,
+          "source": "nvidia-smi"
+        },
+        "min_mw": 1660.0,
+        "sample_count": 142,
+        "sample_stdev_mw": 1809.043499415905
+      },
+      "quant": "Q8_0",
+      "row_id": 101,
+      "ttft_seconds": 2.747943
+    },
+    {
+      "config": "split-v2",
+      "decode_tokens_per_second": 2.229243,
+      "laptop_gpu": {
+        "average_mw": 1896.6871165644172,
+        "duration_seconds": 27.578302089999994,
+        "max_mw": 5320.0,
+        "median_mw": 1740.0,
+        "metadata": {
+          "interval_seconds": 0.1,
+          "source": "nvidia-smi"
+        },
+        "min_mw": 1600.0,
+        "sample_count": 163,
+        "sample_stdev_mw": 480.29319134025553
+      },
+      "quant": "Q8_0",
+      "row_id": 102,
+      "ttft_seconds": 1.079877
+    }
+  ],
+  "method": {
+    "gpu_poll_seconds": 0.1,
+    "laptop_power": "nvidia-smi --query-gpu=power.draw polling",
+    "output_tokens": 64,
+    "phone_power": "unavailable: Phone 2 fuel-gauge reliability insufficient",
+    "prompt": "Explain why the sky is blue in one sentence.",
+    "recorded_pairs": 5,
+    "seed": 42,
+    "slot_id": 0,
+    "statistics": "mean, median, and sample standard deviation",
+    "warmups_excluded_per_config": 1
+  },
+  "quant": "Q8_0",
+  "recorded_rows": {
+    "split-v1": [
+      {
+        "config": "split-v1",
+        "decode_tokens_per_second": 2.531365,
+        "laptop_gpu": {
+          "average_mw": 2616.7763157894738,
+          "duration_seconds": 24.944672828000023,
+          "max_mw": 10340.0,
+          "median_mw": 1730.0,
+          "metadata": {
+            "interval_seconds": 0.1,
+            "source": "nvidia-smi"
+          },
+          "min_mw": 1630.0,
+          "sample_count": 152,
+          "sample_stdev_mw": 2535.7608161105095
+        },
+        "quant": "Q8_0",
+        "row_id": 103,
+        "ttft_seconds": 0.715397
+      },
+      {
+        "config": "split-v1",
+        "decode_tokens_per_second": 2.156651,
+        "laptop_gpu": {
+          "average_mw": 1771.1764705882354,
+          "duration_seconds": 28.057118430999992,
+          "max_mw": 3060.0,
+          "median_mw": 1680.0,
+          "metadata": {
+            "interval_seconds": 0.1,
+            "source": "nvidia-smi"
+          },
+          "min_mw": 1580.0,
+          "sample_count": 170,
+          "sample_stdev_mw": 287.950981054811
+        },
+        "quant": "Q8_0",
+        "row_id": 105,
+        "ttft_seconds": 0.762377
+      },
+      {
+        "config": "split-v1",
+        "decode_tokens_per_second": 2.310212,
+        "laptop_gpu": {
+          "average_mw": 2189.186046511628,
+          "duration_seconds": 26.26803340700002,
+          "max_mw": 10910.0,
+          "median_mw": 1680.0,
+          "metadata": {
+            "interval_seconds": 0.1,
+            "source": "nvidia-smi"
+          },
+          "min_mw": 1590.0,
+          "sample_count": 172,
+          "sample_stdev_mw": 1645.1315488852235
+        },
+        "quant": "Q8_0",
+        "row_id": 107,
+        "ttft_seconds": 0.804208
+      },
+      {
+        "config": "split-v1",
+        "decode_tokens_per_second": 2.249051,
+        "laptop_gpu": {
+          "average_mw": 1825.1923076923076,
+          "duration_seconds": 27.055391031,
+          "max_mw": 4530.0,
+          "median_mw": 1700.0,
+          "metadata": {
+            "interval_seconds": 0.1,
+            "source": "nvidia-smi"
+          },
+          "min_mw": 1580.0,
+          "sample_count": 156,
+          "sample_stdev_mw": 380.2197516612595
+        },
+        "quant": "Q8_0",
+        "row_id": 109,
+        "ttft_seconds": 0.840947
+      },
+      {
+        "config": "split-v1",
+        "decode_tokens_per_second": 2.34254,
+        "laptop_gpu": {
+          "average_mw": 1711.3664596273293,
+          "duration_seconds": 25.844737597999995,
+          "max_mw": 2790.0,
+          "median_mw": 1650.0,
+          "metadata": {
+            "interval_seconds": 0.1,
+            "source": "nvidia-smi"
+          },
+          "min_mw": 1580.0,
+          "sample_count": 161,
+          "sample_stdev_mw": 189.4646962312832
+        },
+        "quant": "Q8_0",
+        "row_id": 111,
+        "ttft_seconds": 0.744768
+      }
+    ],
+    "split-v2": [
+      {
+        "config": "split-v2",
+        "decode_tokens_per_second": 2.372301,
+        "laptop_gpu": {
+          "average_mw": 2817.2027972027972,
+          "duration_seconds": 26.42981358999998,
+          "max_mw": 9660.0,
+          "median_mw": 1770.0,
+          "metadata": {
+            "interval_seconds": 0.1,
+            "source": "nvidia-smi"
+          },
+          "min_mw": 1620.0,
+          "sample_count": 143,
+          "sample_stdev_mw": 2371.7674533878458
+        },
+        "quant": "Q8_0",
+        "row_id": 104,
+        "ttft_seconds": 0.901855
+      },
+      {
+        "config": "split-v2",
+        "decode_tokens_per_second": 2.164015,
+        "laptop_gpu": {
+          "average_mw": 1751.1801242236024,
+          "duration_seconds": 27.89365812599999,
+          "max_mw": 2940.0,
+          "median_mw": 1700.0,
+          "metadata": {
+            "interval_seconds": 0.1,
+            "source": "nvidia-smi"
+          },
+          "min_mw": 1570.0,
+          "sample_count": 161,
+          "sample_stdev_mw": 256.0722038849287
+        },
+        "quant": "Q8_0",
+        "row_id": 106,
+        "ttft_seconds": 0.723342
+      },
+      {
+        "config": "split-v2",
+        "decode_tokens_per_second": 2.293462,
+        "laptop_gpu": {
+          "average_mw": 1734.764705882353,
+          "duration_seconds": 26.36908171099998,
+          "max_mw": 2960.0,
+          "median_mw": 1650.0,
+          "metadata": {
+            "interval_seconds": 0.1,
+            "source": "nvidia-smi"
+          },
+          "min_mw": 1570.0,
+          "sample_count": 170,
+          "sample_stdev_mw": 266.412064471688
+        },
+        "quant": "Q8_0",
+        "row_id": 108,
+        "ttft_seconds": 0.690019
+      },
+      {
+        "config": "split-v2",
+        "decode_tokens_per_second": 2.21628,
+        "laptop_gpu": {
+          "average_mw": 2540.714285714286,
+          "duration_seconds": 27.32395890700002,
+          "max_mw": 9470.0,
+          "median_mw": 1670.0,
+          "metadata": {
+            "interval_seconds": 0.1,
+            "source": "nvidia-smi"
+          },
+          "min_mw": 1580.0,
+          "sample_count": 182,
+          "sample_stdev_mw": 2199.8438005107587
+        },
+        "quant": "Q8_0",
+        "row_id": 110,
+        "ttft_seconds": 0.795956
+      },
+      {
+        "config": "split-v2",
+        "decode_tokens_per_second": 2.197039,
+        "laptop_gpu": {
+          "average_mw": 2627.8443113772455,
+          "duration_seconds": 27.511034637000023,
+          "max_mw": 9920.0,
+          "median_mw": 1760.0,
+          "metadata": {
+            "interval_seconds": 0.1,
+            "source": "nvidia-smi"
+          },
+          "min_mw": 1600.0,
+          "sample_count": 167,
+          "sample_stdev_mw": 2269.4466497578132
+        },
+        "quant": "Q8_0",
+        "row_id": 112,
+        "ttft_seconds": 0.691932
+      }
+    ]
+  },
+  "summary": {
+    "split-v1": {
+      "decode_tokens_per_second": {
+        "mean": 2.3179638000000002,
+        "median": 2.310212,
+        "n": 5,
+        "sample_stdev": 0.1387217949880263
+      },
+      "laptop_gpu_average_mw": {
+        "mean": 2022.7395200417948,
+        "median": 1825.1923076923076,
+        "n": 5,
+        "sample_stdev": 380.7381687542438
+      },
+      "ttft_seconds": {
+        "mean": 0.7735394,
+        "median": 0.762377,
+        "n": 5,
+        "sample_stdev": 0.04954109121022671
+      }
+    },
+    "split-v2": {
+      "decode_tokens_per_second": {
+        "mean": 2.2486194,
+        "median": 2.21628,
+        "n": 5,
+        "sample_stdev": 0.08392299432992133
+      },
+      "laptop_gpu_average_mw": {
+        "mean": 2294.341244880057,
+        "median": 2540.714285714286,
+        "n": 5,
+        "sample_stdev": 513.190529798559
+      },
+      "ttft_seconds": {
+        "mean": 0.7606208000000001,
+        "median": 0.723342,
+        "n": 5,
+        "sample_stdev": 0.08984451840095753
+      }
+    }
+  }
+}

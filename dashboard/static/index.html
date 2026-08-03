@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>EdgeSplit / local-LAN inference research prototype</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/style.css">
+  </head>
+  <body>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a class="wordmark" href="#overview">EDGESPLIT</a>
+      <div class="nav-links">
+        <a href="#overview">Overview</a><a href="#architecture">Architecture</a><a href="#live-demo">Live Demo</a><a href="#v1-v2">V1 vs V2</a><a href="#results">Results</a><a href="#challenges">Engineering Challenges</a><a href="#summary">Summary</a>
+      </div>
+    </nav>
+
+    <main>
+      <section class="hero section" id="overview">
+        <svg class="icon-sprite" aria-hidden="true">
+          <symbol id="icon-person" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c.8-4 3.3-6 7.5-6s6.7 2 7.5 6"/></symbol>
+          <symbol id="icon-router" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 12h5m2-5-2 4m2 6-2-4"/></symbol>
+          <symbol id="icon-server" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h.01M7 16h.01M11 8h6M11 16h6"/></symbol>
+          <symbol id="icon-phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M10 5h4M11 18.5h2"/></symbol>
+          <symbol id="icon-laptop" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="11" rx="1.5"/><path d="M2 19h20M9 19l1-2h4l1 2"/></symbol>
+          <symbol id="icon-wifi" viewBox="0 0 24 24"><path d="M3.5 9.5a12 12 0 0 1 17 0M6.5 12.5a8 8 0 0 1 11 0M9.5 15.5a4 4 0 0 1 5 0"/><circle cx="12" cy="19" r="1"/></symbol>
+          <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 3 20 6v5c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-3Z"/><path d="m8.5 12 2.2 2.2 4.8-4.8"/></symbol>
+          <symbol id="icon-lightning" viewBox="0 0 24 24"><path d="m13 2-8 12h6l-1 8 8-12h-6l1-8Z"/></symbol>
+          <symbol id="icon-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></symbol>
+          <symbol id="icon-sparkle" viewBox="0 0 24 24"><path d="m12 2 1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2ZM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16Z"/></symbol>
+        </svg>
+        <div class="overview-grid">
+          <div class="overview-copy">
+            <p class="overview-badge"><span></span>LOCAL-LAN INFERENCE RESEARCH PROTOTYPE</p>
+            <h1>EdgeSplit</h1>
+            <p class="overview-subheadline">Split LLM inference across the <strong>hardware you already own</strong>.</p>
+            <p class="overview-body">LLMs have two distinct phases: <strong>prefill</strong> (context processing) and <strong>decode</strong> (token generation). EdgeSplit splits the work, <strong>prefill</strong> runs on your <strong>laptop GPU</strong>, <strong>decode</strong> runs on your <strong>Android phone</strong> over Wi-Fi.</p>
+            <p class="overview-supporting">Prefill needs your laptop's GPU, decode doesn't. EdgeSplit frees your laptop the moment prefill finishes, so its compute is available for other work while your phone handles decode.</p>
+
+            <div class="overview-features">
+              <article><svg class="feature-icon" aria-hidden="true"><use href="#icon-laptop"/></svg><div><strong>Laptop Prefill</strong><p>Fast context processing on your GPU.</p></div></article>
+              <article><svg class="feature-icon" aria-hidden="true"><use href="#icon-wifi"/></svg><div><strong>Wi-Fi State Transfer</strong><p>Efficient state handoff over your local LAN.</p></div></article>
+              <article><svg class="feature-icon" aria-hidden="true"><use href="#icon-phone"/></svg><div><strong>Phone Decode</strong><p>Token generation on your Android device.</p></div></article>
+            </div>
+
+            <div class="overview-actions"><a class="overview-primary-action" href="#architecture">See Architecture</a><a class="overview-secondary-action" href="#live-demo">Live Demo</a></div>
+            <div class="overview-divider"></div>
+            <div class="overview-trust"><span><svg aria-hidden="true"><use href="#icon-shield"/></svg>Use hardware you already own</span><span><svg aria-hidden="true"><use href="#icon-lightning"/></svg>Lower latency prefill</span><span><svg aria-hidden="true"><use href="#icon-lock"/></svg>Private &amp; local inference</span></div>
+          </div>
+
+          <aside class="pipeline-preview" aria-label="EdgeSplit pipeline preview">
+            <div class="preview-flow">
+              <article class="preview-step"><div class="preview-step-heading"><span>1.</span><svg aria-hidden="true"><use href="#icon-person"/></svg></div><strong>Caller</strong><p>Application / Client. Sends prompt and parameters.</p></article>
+              <span class="preview-arrow" aria-hidden="true">→</span>
+              <article class="preview-step"><div class="preview-step-heading"><span>2.</span><svg aria-hidden="true"><use href="#icon-router"/></svg></div><strong>FastAPI Router</strong><p>Routes requests and orchestrates the pipeline.</p></article>
+              <span class="preview-arrow" aria-hidden="true">→</span>
+              <article class="preview-step"><div class="preview-step-heading"><span>3.</span><svg aria-hidden="true"><use href="#icon-server"/></svg></div><strong>WSL2 CUDA llama-server</strong><em class="preview-chip preview-chip-gpu">GPU</em><p>Prefill (context processing) on your laptop GPU.</p></article>
+              <span class="preview-arrow" aria-hidden="true">→</span>
+              <article class="preview-step"><div class="preview-step-heading"><span>4.</span><svg aria-hidden="true"><use href="#icon-phone"/></svg></div><strong>Android llama-server</strong><em class="preview-chip preview-chip-phone">PHONE</em><p>Decode (token generation) on your Android phone.</p></article>
+            </div>
+            <div class="preview-return"><div><svg aria-hidden="true"><use href="#icon-wifi"/></svg><p><strong>Wi-Fi State Transfer</strong>: Sequence state handed to the phone over your LAN, with a SHA-256 integrity check on every frame.</p></div></div>
+            <div class="preview-callout"><svg aria-hidden="true"><use href="#icon-sparkle"/></svg><div><strong>Two phases. Two devices. One request.</strong><p>Your laptop GPU is free the moment prefill ends. Nothing leaves your local network.</p></div></div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section" id="architecture">
+        <p class="eyebrow">ARCHITECTURE</p>
+        <h2>Architecture</h2>
+        <svg class="static-architecture" viewBox="0 0 1200 420" role="img" aria-labelledby="architecture-title architecture-description">
+          <title id="architecture-title">EdgeSplit static architecture diagram</title>
+          <desc id="architecture-description">Caller sends a request through the FastAPI router to a CUDA laptop for prefill. V1 and V2 handoff paths join at Android decode, which streams the response back to the router.</desc>
+          <defs><marker id="architecture-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" /></marker><marker id="architecture-return-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" /></marker></defs>
+
+          <path class="architecture-wire" d="M 250 84 H 336" marker-end="url(#architecture-arrow)" />
+          <path class="architecture-wire" d="M 560 84 H 676" marker-end="url(#architecture-arrow)" />
+          <path class="architecture-wire" d="M 810 116 V 146 H 400 V 170" marker-end="url(#architecture-arrow)" />
+          <path class="architecture-wire" d="M 810 146 V 170" marker-end="url(#architecture-arrow)" />
+          <path class="architecture-wire" d="M 400 238 L 467 303" marker-end="url(#architecture-arrow)" />
+          <path class="architecture-wire" d="M 800 238 L 554 305" marker-end="url(#architecture-arrow)" />
+          <path class="architecture-wire" d="M 590 338 H 706" marker-end="url(#architecture-arrow)" />
+          <path class="architecture-return-wire" d="M 920 338 H 1080 V 14 H 530 V 48" marker-end="url(#architecture-return-arrow)" />
+
+          <g class="architecture-node"><rect x="40" y="52" width="210" height="64" rx="6" /><text x="145" y="90">Caller</text></g>
+          <g class="architecture-node"><rect x="340" y="52" width="220" height="64" rx="6" /><text x="450" y="90">FastAPI router</text></g>
+          <g class="architecture-node architecture-node-prefill"><rect x="680" y="52" width="260" height="64" rx="6" /><text x="810" y="81">WSL2 CUDA llama-server</text><text class="architecture-subtitle" x="810" y="101">prefill</text></g>
+
+          <g class="architecture-node"><rect x="250" y="174" width="300" height="64" rx="6" /><text x="400" y="201">V1: slot file</text><text class="architecture-subtitle" x="400" y="221">HTTP state receiver</text></g>
+          <g class="architecture-node"><rect x="650" y="174" width="300" height="64" rx="6" /><text x="800" y="201">V2: raw sequence state</text><text class="architecture-subtitle" x="800" y="221">TCP sender/listener</text></g>
+
+          <g class="architecture-node architecture-node-phone"><rect x="350" y="306" width="240" height="64" rx="6" /><text x="470" y="344">Android llama-server</text></g>
+          <g class="architecture-node"><rect x="710" y="306" width="210" height="64" rx="6" /><text x="815" y="344">decode stream</text></g>
+          <text class="architecture-return-label" x="1002" y="202">back to router</text>
+        </svg>
+      </section>
+
+      <section class="section live-section" id="live-demo">
+        <div class="section-heading"><div><p class="eyebrow">LIVE DEMO</p><h2>Control console</h2></div><div class="run-status" id="run-status" aria-live="polite">READY</div></div>
+        <div class="service-line" id="service-line" aria-label="Service status"></div>
+        <div class="workspace">
+          <aside class="control-panel panel">
+            <div class="panel-heading"><p class="eyebrow">REQUEST</p><h3>Generate</h3></div>
+            <div class="mode-switch" role="group" aria-label="Handoff mode"><button class="mode active" data-mode="v1" type="button">V1 / file handoff</button><button class="mode" data-mode="v2" type="button">V2 / raw state</button></div>
+            <label class="field-label" for="prompt-template">Prompt template</label><div class="template-row"><select id="prompt-template"></select><button class="quiet-button" id="load-template" type="button">Load</button></div>
+            <label class="field-label" for="prompt">Prompt</label><textarea id="prompt" rows="8"></textarea>
+            <div class="settings-grid"><label>Output <input id="n-predict" type="number" min="1" max="512" value="16"></label><label>Seed <input id="seed" type="number" value="42"></label><label>Temperature <input id="temperature" type="number" min="0" max="2" step="0.1" value="0"></label><label>Slot <input id="slot" type="number" min="0" value="0"></label></div>
+            <div class="active-profile"><span>ACTIVE PROFILE</span><strong id="profile">Loading...</strong></div>
+            <button class="run-button" id="run-button" type="button">Run V1 request</button>
+            <p class="control-note">The dashboard proxies the existing router only. It does not start laptop or phone processes.</p>
+          </aside>
+          <section class="response-panel panel">
+            <div class="panel-heading response-heading"><div><p class="eyebrow">PHONE DECODE RESPONSE</p><h3>Output</h3></div><span class="mode-readout" id="mode-readout">V1</span></div>
+            <div class="response" id="response">Run a request to view the generated response.</div>
+            <div class="metric-grid" id="metric-grid"><article><span>TTFT</span><strong id="metric-ttft">-</strong></article><article><span>DECODE</span><strong id="metric-decode">-</strong></article><article><span>OUTPUT</span><strong id="metric-output">-</strong></article><article><span>HANDOFF</span><strong id="metric-handoff">-</strong></article><article><span>BENCH ROW</span><strong id="metric-row">-</strong></article></div>
+            <details class="raw-result"><summary>Raw router response</summary><pre id="raw-result">{}</pre></details>
+          </section>
+        </div>
+        <div class="live-path panel"><p class="eyebrow">ACTIVE HANDOFF PATH</p><div class="path" id="live-architecture"><div class="node">Caller</div><i></i><div class="node active-node" data-node="router">Router</div><i></i><div class="node active-node" data-node="laptop">CUDA prefill</div><i></i><div class="node v1-node">V1 slot file<br>+ HTTP</div><div class="node v2-node">V2 raw state<br>+ TCP</div><i></i><div class="node active-node" data-node="phone">Phone decode</div></div><p class="path-note" id="path-note">V1 preserves the file-based handoff path.</p></div>
+        <article class="panel run-history-panel"><div class="panel-heading"><p class="eyebrow">THIS BROWSER SESSION</p><h3>Run history</h3></div><p class="table-legend">Last 8 successful requests · TTFT = Time to First Token (s) · Decode = generated tokens per second (tok/s)</p><div class="table-wrap"><table><thead><tr><th>TIME</th><th>MODE</th><th>TTFT</th><th>DECODE</th></tr></thead><tbody id="run-history"><tr><td class="run-history-empty" colspan="4">No requests yet.</td></tr></tbody></table></div></article>
+        <div class="terminal-grid"><article class="terminal panel"><header><span>01</span> LAPTOP ACTIVITY <small>read-only / proxy and health events</small><button class="terminal-clear" type="button" data-terminal-source="laptop">Clear</button></header><pre id="laptop-terminal"></pre></article><article class="terminal panel"><header><span>02</span> PHONE ACTIVITY <small>read-only / existing health observations</small><button class="terminal-clear" type="button" data-terminal-source="phone">Clear</button></header><pre id="phone-terminal"></pre></article></div>
+        <article class="panel evidence-panel"><div class="panel-heading"><p class="eyebrow">RETAINED EVIDENCE</p><h3>V1 versus V2</h3></div><p class="table-legend">TTFT = Time to First Token (s) · GPU = laptop GPU power (mW)</p><div class="table-wrap"><table><thead><tr><th>MODEL</th><th>QUANT</th><th>V1 TTFT</th><th>V2 TTFT</th><th>V1 GPU</th><th>V2 GPU</th></tr></thead><tbody id="history-table"></tbody></table></div></article>
+      </section>
+
+      <section class="section" id="v1-v2">
+        <p class="eyebrow">V1 VS V2</p><h2>V1 versus V2: controlled phone comparison</h2>
+        <div class="flow-cards"><article class="panel"><p class="eyebrow">V1</p><p><code>llama.cpp</code> slot-save file → HTTP upload → slot restore.</p></article><article class="panel"><p class="eyebrow">V2</p><p>patched raw sequence-state export → versioned raw TCP frame → patched in-process sequence-state import.</p></article></div>
+        <p><strong>Timing-only pass.</strong> For each quant, one V1/V2 warm-up pair was run and excluded, followed by five retained pairs per configuration. No power sampling ran during these requests. A separate <a href="#results">GPU-instrumented pass</a> repeated the same method on its own runs and reports different absolute TTFT values; both are retained rather than one replacing the other.</p>
+        <p class="table-legend">TTFT = Time to First Token (s) · Decode = generated tokens per second (tok/s) · mean ± standard deviation (median)</p>
+        <div class="table-wrap"><table><thead><tr><th>QUANT</th><th>V1 TTFT</th><th>V2 TTFT</th><th>V1 DECODE</th><th>V2 DECODE</th></tr></thead><tbody><tr><td>Q4_K_M</td><td>2.838 ± 1.174 s (3.252)</td><td>0.677 ± 0.064 s (0.675)</td><td>8.695 ± 0.035 tok/s (8.681)</td><td>8.756 ± 0.060 tok/s (8.748)</td></tr><tr><td>Q4_0</td><td>2.433 ± 1.527 s (1.817)</td><td>0.614 ± 0.048 s (0.605)</td><td>9.028 ± 0.237 tok/s (9.037)</td><td>8.940 ± 0.504 tok/s (9.202)</td></tr><tr><td>Q8_0</td><td>2.461 ± 1.331 s (2.769)</td><td>0.686 ± 0.071 s (0.681)</td><td>8.171 ± 0.145 tok/s (8.138)</td><td>7.737 ± 0.737 tok/s (7.803)</td></tr></tbody></table></div>
+        <p>In this timing-only pass V2 reduced mean TTFT by 76.16% (Q4_K_M), 74.78% (Q4_0), and 72.11% (Q8_0). The V1 state-file path has markedly higher TTFT variance. Decode remains a phone-side property rather than a V2 optimization target.</p>
+      </section>
+
+      <section class="section" id="results">
+        <p class="eyebrow">RESULTS</p><h2>Primary five-pair statistics</h2>
+        <p class="table-legend">TTFT = Time to First Token (s) · Decode / Generation = generated tokens per second (tok/s) · GPU = laptop GPU power draw (W) · ± = sample standard deviation · parenthesized value = median</p>
+        <h3><code>Qwen3-0.6B</code>: timing-only pass</h3>
+        <div class="result-metrics" aria-label="Qwen V2 mean TTFT deltas, timing-only pass">
+          <article class="metric-card"><div class="metric-card-head"><span class="metric-icon metric-blue" aria-hidden="true">↓</span><span class="trend-badge trend-blue">−76.16%</span></div><p>Q4_K_M</p><strong>V2 reduced mean TTFT by</strong><b>76.16%</b></article>
+          <article class="metric-card"><div class="metric-card-head"><span class="metric-icon metric-purple" aria-hidden="true">↓</span><span class="trend-badge trend-purple">−74.78%</span></div><p>Q4_0</p><strong>V2 reduced mean TTFT by</strong><b>74.78%</b></article>
+          <article class="metric-card"><div class="metric-card-head"><span class="metric-icon metric-red" aria-hidden="true">↓</span><span class="trend-badge trend-red">−72.11%</span></div><p>Q8_0</p><strong>V2 reduced mean TTFT by</strong><b>72.11%</b></article>
+          <article class="metric-card"><div class="metric-card-head"><span class="metric-icon metric-orange" aria-hidden="true">~</span><span class="trend-badge trend-steady">Steady</span></div><p>Decode</p><strong>Decode remains a phone-side property rather than a V2 optimization target.</strong></article>
+        </div>
+        <h3><code>Qwen3-0.6B</code>: GPU-instrumented pass (separate runs)</h3>
+        <div class="table-wrap"><table><thead><tr><th>QUANT</th><th>V1 TTFT</th><th>V2 TTFT</th><th>V1 DECODE</th><th>V2 DECODE</th><th>V1 GPU</th><th>V2 GPU</th></tr></thead><tbody><tr><td>Q4_K_M</td><td>2.425 +/- 1.262 s (2.022)</td><td>0.841 +/- 0.272 s (0.793)</td><td>8.442 +/- 0.409 (8.663)</td><td>8.078 +/- 0.356 (8.024)</td><td>2.17 +/- 0.16 W</td><td>2.38 +/- 0.08 W</td></tr><tr><td>Q4_0</td><td>3.569 +/- 0.326 s (3.406)</td><td>0.632 +/- 0.043 s (0.650)</td><td>9.280 +/- 0.081 (9.262)</td><td>8.979 +/- 0.227 (9.018)</td><td>2.08 +/- 0.08 W</td><td>2.49 +/- 0.14 W</td></tr><tr><td>Q8_0</td><td>3.404 +/- 0.490 s (3.681)</td><td>0.610 +/- 0.084 s (0.594)</td><td>8.128 +/- 0.346 (8.241)</td><td>7.261 +/- 0.523 (6.947)</td><td>2.07 +/- 0.11 W</td><td>2.40 +/- 0.25 W</td></tr></tbody></table></div>
+        <h3><code>Llama-3.2-1B-Instruct</code>: GPU-instrumented pass (separate runs)</h3>
+        <div class="table-wrap"><table><thead><tr><th>QUANT</th><th>V1 TTFT</th><th>V2 TTFT</th><th>V1 DECODE</th><th>V2 DECODE</th><th>V1 GPU</th><th>V2 GPU</th></tr></thead><tbody><tr><td>Q4_K_M</td><td>0.697 +/- 0.028 s (0.702)</td><td>0.614 +/- 0.012 s (0.616)</td><td>2.809 +/- 0.153 (2.792)</td><td>2.797 +/- 0.142 (2.831)</td><td>2.62 +/- 0.55 W</td><td>2.16 +/- 0.32 W</td></tr><tr><td>Q4_0</td><td>0.812 +/- 0.298 s (0.695)</td><td>0.620 +/- 0.026 s (0.624)</td><td>2.879 +/- 0.195 (2.909)</td><td>2.893 +/- 0.105 (2.857)</td><td>1.82 +/- 0.06 W</td><td>1.81 +/- 0.03 W</td></tr><tr><td>Q8_0</td><td>0.774 +/- 0.050 s (0.762)</td><td>0.761 +/- 0.090 s (0.723)</td><td>2.318 +/- 0.139 (2.310)</td><td>2.249 +/- 0.084 (2.216)</td><td>2.02 +/- 0.38 W</td><td>2.29 +/- 0.51 W</td></tr></tbody></table></div>
+        <p class="table-legend">Llama Q4_K_M GPU stability rerun (current templated workload): V1 2.62 +/- 0.55 W (20.9% relative s.d.); V2 2.16 +/- 0.32 W (14.6%). The initial high-variance window did not reproduce.</p>
+        <h3>Q4_K_M NEON accumulator comparison: Phone</h3>
+        <div class="table-wrap"><table><thead><tr><th>BUILD</th><th>TTFT</th><th>DECODE THROUGHPUT</th></tr></thead><tbody><tr><td>Stock</td><td>11.20 +/- 0.36 s</td><td>6.28 +/- 0.22 tok/s</td></tr><tr><td>NEON accumulator</td><td>9.96 +/- 0.07 s</td><td>6.58 +/- 0.23 tok/s</td></tr></tbody></table></div>
+        <h3>Laptop-only baselines</h3>
+        <div class="result-columns"><div class="table-wrap"><table><thead><tr><th>QWEN3-0.6B / QUANT</th><th>TTFT</th><th>GENERATION</th></tr></thead><tbody><tr><td>Q4_0</td><td>2.661759 s</td><td>177.6 tok/s</td></tr><tr><td>Q8_0</td><td>1.788383 s</td><td>193.3 tok/s</td></tr><tr><td>Q4_K_M</td><td>1.503534 s</td><td>241.0 tok/s</td></tr></tbody></table></div><div class="table-wrap"><table><thead><tr><th>LLAMA-3.2-1B / QUANT</th><th>TTFT</th><th>GENERATION</th></tr></thead><tbody><tr><td>Q4_0</td><td>2.806014 s</td><td>171.7 tok/s</td></tr><tr><td>Q8_0</td><td>2.269317 s</td><td>122.5 tok/s</td></tr><tr><td>Q4_K_M</td><td>2.343214 s</td><td>176.7 tok/s</td></tr></tbody></table></div></div>
+      </section>
+
+      <section class="section" id="challenges">
+        <p class="eyebrow">ENGINEERING CHALLENGES</p><h2>Scope and limitations</h2>
+        <div class="quote-stack"><blockquote>An Android source-build compatibility limitation is documented in the README’s engineering notes. It does not affect the demonstrated laptop-to-phone LAN path.</blockquote><blockquote>A fixed-seed, temperature-zero 64-token correctness gate produced identical generated text from stock and optimized binaries after excluding llama-cli's timing footer.</blockquote><blockquote>Phone battery power is intentionally absent from these tables. The initial <code>current_avg</code> vendor fuel-gauge sysfs source was invalid: filtering rejected 162/176 samples in a plugged window and 179/180 in an unplugged window, with values as high as 40 A and 251.406 A.</blockquote></div>
+      </section>
+
+      <section class="section summary" id="summary">
+        <p class="eyebrow">SUMMARY</p><h2>EdgeSplit</h2>
+        <p><code>V2</code> is additive: it does not replace <code>V1</code>, delete <code>V1</code> artifacts, or alter the stock <code>/slots</code> save/restore routes.</p>
+        <p>This is a single-request experimental system, not a production distributed inference service.</p>
+        <p>Prefix caching remains optional follow-up work. The NEON kernel is completed as a separately scoped Phone stretch result and is not part of the V1/V2 architectural claim.</p>
+      </section>
+    </main>
+    <script src="/assets/app.js"></script>
+  </body>
+</html>
