@@ -46,8 +46,11 @@ adds **4.8%** decode throughput on that phone over a stock build.
 
 ### 1. Video walkthrough
 
-<!-- Drag EdgeSplit_demo_subtitled.mp4 onto this line in the GitHub editor.
-     GitHub uploads it and replaces this comment with an inline player. -->
+
+
+https://github.com/user-attachments/assets/2347ef21-61b7-4d75-b052-2c0447d69dc4
+
+
 
 ### 2. Control dashboard, one completed V2 request
 
